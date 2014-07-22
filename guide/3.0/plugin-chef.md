@@ -11,11 +11,13 @@ yaml_link: http://getcloudify.org/spec/chef-plugin/1.0/plugin.yaml
 
 {%summary%} The Chef plugin can be used to map node life cycle operations to Chef runs. {%endsummary%}
 
-# Chef plugin usage options
+# Chef plugin provisioners
 
-The Chef plugin allows you to run either Chef Client or Chef Solo. The usage option is chosen based on presence or absence of specific properties under node's `properties` > `chef_config`. Chef is installed on demand, if there is no lifecycle operation that needs Chef run - it is not installed.
+The Chef plugin allows you to run either Chef Client or Chef Solo.
+The provisioner is chosen based on presence or absence of specific properties under node's `chef_config` configuration.
 
-* Chef Client requires the following properties:
+__Chef Client__ requires the following properties:
+
   * `chef_server_url`
   * `environment`
   * `node_name_prefix`
@@ -23,11 +25,13 @@ The Chef plugin allows you to run either Chef Client or Chef Solo. The usage opt
   * `validation_client_name`
   * `validation_key`
   * `version`
-* Chef Solo requires the following properties:
+
+__Chef Solo__ requires the following properties:
+
   * `cookbooks`
   * `version`
 
-It's an error if neither of the two sets appear. You will see "Failed to find appropriate Chef manager ..." in logs if that's the case.
+You will see "Failed to find appropriate Chef manager ..." in logs if neither of the two sets appear in the configuration.
 
 Example:
 {% highlight yaml %}
@@ -44,6 +48,10 @@ blueprint:
           ...
 {%endhighlight%}
 
+{% tip title=When Chef is installed? %}
+Chef is installed on demand, if there is no lifecycle operation that needs Chef run - it won't be installed.
+{% endtip %}
+
 # Types
 
 Node types that can be used for Chef nodes are listed below. All of them are derived from the corresponding [abstract types](reference-types.html#abstract-types).
@@ -54,47 +62,40 @@ Node types that can be used for Chef nodes are listed below. All of them are der
 * `cloudify.types.chef.message_bus_server` -- derived from `cloudify.types.message_bus_server`
 * `cloudify.types.chef.web_server` -- derived from `cloudify.types.web_server`
 
-In addition to inherited properties all of the Chef types have the following properties:
+In addition to inherited properties, all Chef types have the following properties:
 
-**Properties for Chef Client and Chef Solo:**
+* `attributes` (optional) - [attributes to pass to Chef](#blueprint-provided-attributes).
+* `runlist` (optional) - [runlist for all operations](#specifying-runlists).
+* `runlists` (optional) - [per-operation runlists](#specifying-runlists).
+	* OPNAME - runlist for the OPNAME lifecycle operation.
+* `version` __(required)__ - [Chef version to install](#chef-version-to-install).
+* `chef_server_url` __(required)__ <sup>1</sup>
+* `environment` __(required)__ <sup>1</sup>
+* `node_name_prefix` - [Chef node name](#chef-server-naming) prefix. <sup>1</sup>
+* `node_name_suffix` - [Chef node name](#chef-server-naming) suffix. <sup>1</sup>
+* `validation_client_name` __(required)__ <sup>1</sup>
+* `validation_key` __(required)__ - validation file contents. <sup>1</sup>
+* `cookbooks` __(required)__ - URL or path in blueprint designating a .tar.gz file that contains cookbooks. <sup>2</sup>
+* `data_bags` __(required)__ - URL or path in blueprint designating a .tar.gz file that contains data bags' JSON files. <sup>2</sup>
+* `environments` __(required)__ - URL or path in blueprint designating a .tar.gz file that contains environments' JSON files. <sup>2</sup>
+* `roles` __(required)__ - URL or path in blueprint designating a .tar.gz file that contains roles' JSON files. <sup>2</sup>
 
-* `chef_config` contains all Chef specific configuration.
-	* `attributes` (optional) - [attributes to pass to Chef](#blueprint-provided-attributes).
-	* `runlist` (optional) - [runlist for all operations](#specifying-runlists).
-	* `runlists` (optional) - [per-operation runlists](#specifying-runlists).
-		* OPNAME - runlist for the OPNAME lifecycle operation.
-	* `version` (required) - [Chef version to install](#chef-version-to-install).
+<sup>1</sup> Chef Client properties only<br/>
+<sup>2</sup> Chef Solo properties only
 
-**Properties for Chef Client only:**
-
-* `chef_config` contains all Chef specific configuration
-	* `chef_server_url` (required)
-	* `environment`(required)
-	* `node_name_prefix` - [Chef node name](#chef-server-naming) prefix.
-	* `node_name_suffix` - [Chef node name](#chef-server-naming) suffix.
-	* `validation_client_name` (required)
-	* `validation_key` (required) - validation file contents.
-
-See [Chef Client Configuration](#chef-client-configuration) section for more information about Chef Client properties.
-
-**Properties for Chef Solo only:**
-
-* `chef_config` contains all Chef specific configuration
-	* `cookbooks` (Chef solo only, required) - URL or path in blueprint designating a .tar.gz file that contains cookbooks.
-	* `data_bags` (Chef solo only, required) - URL or path in blueprint designating a .tar.gz file that contains data bags' JSON files.
-	* `environments` (Chef solo only, required) - URL or path in blueprint designating a .tar.gz file that contains environments' JSON files.
-	* `roles` (Chef solo only, required) - URL or path in blueprint designating a .tar.gz file that contains roles' JSON files.
-
-See [Chef Solo Configuration](#chef-solo-configuration) section for more information about Chef Client properties.
+See [Chef Solo Configuration](#chef-solo-configuration) & [Chef Client Configuration](#chef-client-configuration) sections for more information.
 
 # Integration
 
-This section describes integration aspects that are common to both Chef Client and Chef Solo. Also see [Chef Solo](#chef-Solo) and [Chef Client](#chef-Client) sections for additional integration details.
+This section describes integration aspects that are common to both Chef Client and Chef Solo.
+Also see [Chef Solo](#chef-Solo) and [Chef Client](#chef-Client) sections for additional integration details.
 
 
 ## Operation naming
 
-When defining a YAML node, there are several places that contain per-operation configuration. Most of the operations in Cloudify are named `cloudify.interfaces.lifecycle.*` and `cloudify.interfaces.relationship_lifecycle.*`. For convenience, when defining a node, the operation names are shortened so only the last part is used. Example:
+When defining a YAML node, there are several places that contain per-operation configuration.
+Most of the operations in Cloudify are named `cloudify.interfaces.lifecycle.*` and `cloudify.interfaces.relationship_lifecycle.*`.
+For convenience, when defining a node, the operation names are shortened so only the last part is used. Example:
 
 {% highlight yaml %}
 imports:
@@ -113,7 +114,7 @@ blueprint:
 {%endhighlight%}
 
 ## Specifying runlist(s)
-Under `properties` > `chef_config` you must specify either `runlist` or `runlists`.
+Under `chef_config` you must specify either `runlist` or `runlists`.
 
 If `runlist` is given, it is used for all lifecycle operations. Example.
 
@@ -131,7 +132,8 @@ blueprint:
           runlist: 'recipe[my_org_webserver::start]'  # cloudify.interfaces.lifecycle.*
 {%endhighlight%}
 
-If `runlists` is given, you can specify per-operation runlist. Operations with no runlist specified (under `runlists` > OPNAME) will not cause a Chef run.
+If `runlists` is given, you can specify per-operation runlist.
+Operations with no runlist specified (under `runlists`) won't cause Chef run.
 
 {%note title=Note%}
 A runlist can be a string (such as `recipe[my_super_recipe]`) or a list of such strings. See the following example.
@@ -157,9 +159,11 @@ blueprint:
               - 'recipe[my_org_webserver::cleanup]'
 {%endhighlight%}
 
-## Chef version to install
+## Chef version
 
-You must specify which Chef version to install (to use as Client or Solo) under `properties` > `chef_config` > `version`. There is no default, `version` is required. You must use the same version for all YAML nodes which reside on the same server.
+To specify which Chef version to install, set the value of `version`.
+It is required settings and there is no default.
+You must use the same version for all YAML nodes which reside on the same server.
 
 Example:
 {% highlight yaml %}
@@ -232,7 +236,9 @@ The following Chef attributes will be available:
 
 ## Importing Chef attributes to runtime properties
 
-After each Chef run, Cloudify will automatically store all the Chef attributes (as they are seen at the end of Chef run) in the runtime properties of the Cloudify node instance that cause the Chef run. The Chef attributes will be stored under runtime properties > `chef_attributes`.
+After each Chef run, Cloudify will automatically store all the Chef attributes
+(as they are seen at the end of Chef run) in the runtime properties of the Cloudify node instance that initiated Chef run. 
+The Chef attributes will be stored under runtime `chef_attributes`.
 
 {%note title=Info%}
 For the export purposes, the attributes are stored in a temporary file named `node['cloudify']['attributes_output_file']` (which must not be changed) by Cloudify's Chef handler.
