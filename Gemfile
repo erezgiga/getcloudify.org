@@ -1,10 +1,6 @@
 source 'https://rubygems.org'
-
-gem 'json', '~> 1.7.7'
-gem 'kramdown'
+gem 'jekyll', '~> 2.4.0'
+gem 'jekyll_ext', '~> 0.1.4'
+gem 'json', '~> 1.8.1'
 gem 'RedCloth'
-gem 'jekyll', "~> 1.3.0", require: nil
 gem 's3_website', '2.1.16'
-gem 'redcarpet'
-gem 'travis'
-gem 'jekyll_ext'
