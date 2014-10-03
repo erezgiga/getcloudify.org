@@ -3,5 +3,5 @@
 *.iml
 .idea
 .bundle
-_site/*
+source/_site
 Gemfile.lock
