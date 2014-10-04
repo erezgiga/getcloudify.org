@@ -1,0 +1,3 @@
+minibundle:
+  minifier_commands:
+    js: ./node_modules/.bin/uglifyjs -

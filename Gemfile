@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 gem 'jekyll', '~> 2.4.0'
 gem 'jekyll_ext', '~> 0.1.4'
+gem 'jekyll-minibundle', '~> 1.5.0'
 gem 'json', '~> 1.8.1'
 gem 'RedCloth'
 gem 's3_website', '2.1.16'
