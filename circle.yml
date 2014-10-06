@@ -10,14 +10,13 @@ machine:
 
 test:
   override:
-    - cd source; jekll build:
+    - cd source; jekyll build:
         timeout: 600
     - cd source/_site ; sudo -E python -mSimpleHTTPServer 80:
        background: true
     - sleep 3
     - linkchecker http://getcloudify.org/guide/ --anchors --no-status --ignore-url=guide/2.7 --ignore-url=^mailto
 
-## Customize deployment commands
 deployment:
   production:
     branch: master
