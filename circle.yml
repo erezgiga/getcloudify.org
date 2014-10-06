@@ -1,17 +1,13 @@
 machine:
   hosts:
     getcloudify.org: 127.0.0.1
-  python:
-    version:
-      2.7.8
-  ruby:
-    version:
-      2.1.2
 
 test:
-  override:
-    - cd source; jekyll build:
+  pre:
+    - cd source && bundle exec jekyll build:
         timeout: 600
+  override:
+    - cd source && bundle exec jekyll doctor
     - cd source/_site ; sudo -E python -mSimpleHTTPServer 80:
        background: true
     - sleep 3
