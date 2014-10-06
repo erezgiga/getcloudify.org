@@ -1,3 +1,3 @@
-"dependencies": {
-    "uglify-js": "*"
-  }
+{ 
+  "dependencies": { "uglify-js": "*" }
+}
